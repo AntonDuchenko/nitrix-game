@@ -1,6 +1,10 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import styles from "./Form.module.scss";
-import { useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
+import { login, registration } from "../../utils/api/auth";
+import { useAuth } from "../../hooks/useAuth";
+import { Button } from "../Button/Button";
+import { useState } from "react";
 
 type Inputs = {
   email: string;
@@ -8,15 +12,39 @@ type Inputs = {
 };
 
 export const Form = () => {
+  const { login: authenticate } = useAuth();
   const path = useLocation().pathname;
   const isLogin = path === "/login";
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<Inputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      setLoading(true);
+      if (isLogin) {
+        await login({ email: data.email, password: data.password });
+        authenticate();
+
+        navigate("/game");
+      } else {
+        await registration({
+          email: data.email,
+          password: data.password,
+        });
+
+        navigate("/login");
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -62,17 +90,19 @@ export const Form = () => {
           )}
         </div>
 
-        <button type="submit">Sign in</button>
+        <Button loading={loading} type="submit">
+          Sign in
+        </Button>
       </form>
 
       <span className={styles.text}>
         {isLogin ? (
           <>
-            Don’t have account? <a href="/register">Create account</a>
+            Don’t have account? <Link to="/register">Create account</Link>
           </>
         ) : (
           <>
-            Have an account? <a href="/login">Login Now</a>
+            Have an account? <Link to="/login">Login Now</Link>
           </>
         )}
       </span>

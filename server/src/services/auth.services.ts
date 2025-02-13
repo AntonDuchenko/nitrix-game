@@ -9,12 +9,16 @@ export const createUser = async (email: string, password: string) => {
   return await user.create({ email, password });
 };
 
-export const genarateToken = (uuid: string) => {
+export const genarateToken = (id: string) => {
   return jwt.sign(
     {
-      uuid,
+      id,
     },
     process.env.JWT_SECRET || "",
     { expiresIn: "1d" }
   );
+};
+
+export const isTokenValid = async (token: string) => {
+  return jwt.verify(token, process.env.JWT_SECRET || "");
 };
