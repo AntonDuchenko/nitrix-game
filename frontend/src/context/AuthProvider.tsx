@@ -19,7 +19,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const isTokenValid = async () => {
       try {
-        await checkToken(token);
+        const res = await checkToken(token);
+
+        if (res.message === "Token is valid") {
+          setIsAuthenticated(true);
+          Coockies.set("userId", res.userId);
+        }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         Coockies.remove("auth_token");

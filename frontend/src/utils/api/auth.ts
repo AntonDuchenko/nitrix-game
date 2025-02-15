@@ -28,6 +28,7 @@ export const login = async ({
   try {
     const response = await instance.post("/auth/login", { email, password });
     Cookies.set("auth_token", response.data.token);
+    Cookies.set("userId", response.data.userId);
 
     return response.data;
   } catch (error) {

@@ -8,6 +8,7 @@ import {
 import codeStatuses from "../constants";
 import bcrypt from "bcrypt";
 import { handleError } from "../utils/handleError";
+import { JwtPayload } from "jsonwebtoken";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -57,7 +58,7 @@ export const login = async (req: Request, res: Response) => {
 
       res
         .status(codeStatuses.SUCCESS_CODE_STATUS)
-        .json({ message: "Login successful", token });
+        .json({ message: "Login successful", token, userId: user._id });
     }
   } catch (error) {
     handleError(error, res);
@@ -75,11 +76,11 @@ export const checkToken = async (req: Request, res: Response) => {
       return;
     }
 
-    await isTokenValid(token);
+    const userId = isTokenValid(token) as JwtPayload;
 
     res
       .status(codeStatuses.SUCCESS_CODE_STATUS)
-      .json({ message: "Token is valid" });
+      .json({ message: "Token is valid", userId: userId.id });
   } catch (error) {
     handleError(error, res);
   }

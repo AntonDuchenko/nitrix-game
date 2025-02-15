@@ -1,0 +1,42 @@
+.game {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  align-items: center;
+  background: #8c2525;
+  min-height: 100vh;
+  height: 100%;
+}
+
+.players {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.attackBtn {
+  max-width: 200px;
+}
+
+.quitBtn {
+  max-width: 300px;
+  width: 100%;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+}
+
+.position {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 42px;
+  line-height: 46.2px;
+  max-width: 80vw;
+}

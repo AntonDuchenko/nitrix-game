@@ -5,7 +5,7 @@ const gameRouter = express.Router();
 
 gameRouter.get("/", authenticateToken, (req, res) => {
   console.log(req.body);
-  
+
   res.send("Hello World!");
 });
 

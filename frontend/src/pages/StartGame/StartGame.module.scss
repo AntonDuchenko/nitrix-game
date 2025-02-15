@@ -1,0 +1,17 @@
+.game {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #8c2525;
+  min-height: 100vh;
+  height: 100%;
+}
+
+.playBtn {
+  max-width: 300px;
+  width: 100%;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+}

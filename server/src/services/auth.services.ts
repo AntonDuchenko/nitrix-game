@@ -14,11 +14,11 @@ export const genarateToken = (id: string) => {
     {
       id,
     },
-    process.env.JWT_SECRET || "",
+    process.env.JWT_SECRET ?? "default-secret",
     { expiresIn: "1d" }
   );
 };
 
-export const isTokenValid = async (token: string) => {
-  return jwt.verify(token, process.env.JWT_SECRET || "");
+export const isTokenValid = (token: string) => {
+  return jwt.verify(token, process.env.JWT_SECRET ?? "default-secret");
 };
