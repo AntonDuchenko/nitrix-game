@@ -1,0 +1,57 @@
+.modalWrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100%;
+  background: rgba(0, 0, 0, .8);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+}
+
+.modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 450px;
+  max-height: 80vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 36px;
+  color: #fff;
+
+  gap: 16px;
+  background: linear-gradient(180deg, rgb(223 39 39 / 90%) 0%, rgba(51, 51, 51, 0.9) 100%);
+  padding: 19px 16px 49px;
+  animation: slideUp 0.3s ease-out;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, #FFFFFF 0%, rgba(112, 94, 94, 0) 100%);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+}
+
+.winner {
+  background: linear-gradient(180deg, rgb(37 218 39 / 90%) 0%, rgba(51, 51, 51, 0.9) 100%);
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}

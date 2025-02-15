@@ -139,11 +139,17 @@ function createServer() {
 
       if (opponent.turn && targetEntity.turn) {
         if (opponent.turn.attack !== targetEntity.turn.defend) {
-          targetEntity.health -= 1;
+          targetEntity.health -= 10;
         }
 
         if (targetEntity.turn.attack !== opponent.turn.defend) {
-          opponent.health -= 1;
+          opponent.health -= 10;
+        }
+
+        if (targetEntity.health <= 0 || opponent.health <= 0) {
+          io.to(data.roomName).emit("gameOver", {
+            winner: targetEntity.health <= 0 ? opponent.id : targetEntity.id,
+          });
         }
 
         targetEntity.turn = null;

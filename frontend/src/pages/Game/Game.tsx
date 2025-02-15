@@ -7,6 +7,7 @@ import { useSocket } from "../../hooks/useSocket";
 import { Loader } from "../../components/Loader/Loader";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router";
+import { ResultModal } from "../../components/ResultModal/ResultModal";
 
 export const Game = () => {
   const { socket } = useSocket();
@@ -16,6 +17,7 @@ export const Game = () => {
   const [isWaiting, setIsWaiting] = useState(false);
   const [myHealth, setMyHealth] = useState(10);
   const [opponentHealth, setOpponentHealth] = useState(10);
+  const [isWinner, setIsWinner] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const id = Cookies.get("userId");
 
@@ -68,6 +70,16 @@ export const Game = () => {
     });
   }, [socket]);
 
+  useEffect(() => {
+    socket?.on("gameOver", (data) => {
+      if (data.winner === id) {
+        setIsWinner(true);
+      } else {
+        setIsWinner(false);
+      }
+    });
+  }, [id, socket]);
+
   const handleChangeAttackBodyPart = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -96,6 +108,11 @@ export const Game = () => {
     });
 
     setIsWaiting(true);
+  };
+
+  const handlePlayAgain = () => {
+    socket?.emit("joinRoom");
+    navigate("/game", { replace: true });
   };
 
   return (
@@ -134,6 +151,14 @@ export const Game = () => {
             {isWaiting ? "Waiting for your opponent" : "Attack"}
           </Button>
         </>
+      )}
+
+      {isWinner !== null && (
+        <ResultModal
+          onQuit={handleQuit}
+          onPlayAgain={handlePlayAgain}
+          isWinner={isWinner}
+        />
       )}
     </div>
   );
