@@ -18,11 +18,14 @@ export const ResultModal: React.FC<ResultModalProps> = ({
     <div className={styles.modalWrapper}>
       <div
         className={classNames(styles.modal, {
+          [styles.draw]: isWinner === null,
           [styles.winner]: isWinner,
         })}
       >
         Result
-        <span>{isWinner ? "You win" : "You lose"}</span>
+        <span>
+          {isWinner === null ? "Draw" : isWinner ? "You win" : "You lose"}
+        </span>
         <div className={styles.buttons}>
           <Button onClick={onQuit}>Quit</Button>
           <Button onClick={onPlayAgain}>Play again</Button>

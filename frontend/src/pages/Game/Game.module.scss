@@ -4,7 +4,7 @@
   justify-content: center;
   gap: 20px;
   align-items: center;
-  background: #8c2525;
+  background: url("../../assets/arena-bg.webp") center center / cover no-repeat;
   min-height: 100vh;
   height: 100%;
 }
@@ -22,11 +22,6 @@
 
 .quitBtn {
   max-width: 300px;
-  width: 100%;
-
-  &:hover {
-    transform: scale(1.2);
-  }
 }
 
 .position {

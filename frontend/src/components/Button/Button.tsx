@@ -13,7 +13,11 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   return (
-    <button className={classNames(styles.btn, className)} {...props}>
+    <button
+      type="button"
+      className={classNames(styles.btn, className)}
+      {...props}
+    >
       {loading ? <Loader /> : children}
     </button>
   );

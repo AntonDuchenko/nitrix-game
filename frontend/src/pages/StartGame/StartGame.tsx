@@ -16,6 +16,12 @@ export const StartGamePage = () => {
     });
   }, [socket]);
 
+  useEffect(() => {
+    if (Cookies.get("roomName")) {
+      navigate("./play");
+    }
+  }, []);
+
   const handleClick = () => {
     connect(import.meta.env.VITE_SOCKET_URL);
   };

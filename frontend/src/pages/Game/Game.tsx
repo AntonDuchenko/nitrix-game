@@ -17,7 +17,13 @@ export const Game = () => {
   const [isWaiting, setIsWaiting] = useState(false);
   const [myHealth, setMyHealth] = useState(10);
   const [opponentHealth, setOpponentHealth] = useState(10);
-  const [isWinner, setIsWinner] = useState<boolean | null>(null);
+  const [myDamageGotten, setMyDamageGotten] = useState<number | null>(null);
+  const [opponentDamageGotten, setOpponentDamageGotten] = useState<
+    number | null
+  >(null);
+  const [isWinner, setIsWinner] = useState<boolean | null | undefined>(
+    undefined
+  );
   const navigate = useNavigate();
   const id = Cookies.get("userId");
 
@@ -45,8 +51,10 @@ export const Game = () => {
     const handleEntityUpdated = (data: IEntity[]) => {
       data.forEach((entity) => {
         if (entity.entityId === id) {
+          setMyDamageGotten(myHealth - entity.updates.health);
           setMyHealth(entity.updates.health);
         } else {
+          setOpponentDamageGotten(opponentHealth - entity.updates.health);
           setOpponentHealth(entity.updates.health);
         }
       });
@@ -61,7 +69,7 @@ export const Game = () => {
     return () => {
       socket?.off("entityUpdated", handleEntityUpdated);
     };
-  }, [socket, id]);
+  }, [socket, id, myHealth, opponentHealth]);
 
   useEffect(() => {
     socket?.on("reconnectError", () => {
@@ -72,10 +80,18 @@ export const Game = () => {
 
   useEffect(() => {
     socket?.on("gameOver", (data) => {
-      if (data.winner === id) {
-        setIsWinner(true);
-      } else {
-        setIsWinner(false);
+      switch (data.winner) {
+        case null:
+          setIsWinner(null);
+          break;
+
+        case id:
+          setIsWinner(true);
+          break;
+
+        default:
+          setIsWinner(false);
+          break;
       }
     });
   }, [id, socket]);
@@ -112,7 +128,8 @@ export const Game = () => {
 
   const handlePlayAgain = () => {
     socket?.emit("joinRoom");
-    navigate("/game", { replace: true });
+    setGameStarted(false);
+    setIsWinner(undefined);
   };
 
   return (
@@ -130,14 +147,18 @@ export const Game = () => {
           <div className={styles.players}>
             <Player
               health={myHealth}
-              name="defender"
+              damage={myDamageGotten}
+              setDamage={setMyDamageGotten}
+              type="defender"
               onChangeBodyPart={handleChangeDefendBodyPart}
               bodyPart={defendBodyPart}
             />
 
             <Player
               health={opponentHealth}
-              name="attacker"
+              damage={opponentDamageGotten}
+              setDamage={setOpponentDamageGotten}
+              type="attacker"
               onChangeBodyPart={handleChangeAttackBodyPart}
               bodyPart={attackBodyPart}
             />
@@ -153,7 +174,7 @@ export const Game = () => {
         </>
       )}
 
-      {isWinner !== null && (
+      {isWinner !== undefined && (
         <ResultModal
           onQuit={handleQuit}
           onPlayAgain={handlePlayAgain}

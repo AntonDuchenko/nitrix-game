@@ -129,6 +129,10 @@ function createServer() {
 
       if (!targetEntity) return;
 
+      if (!data.actions.attack) return;
+
+      if (targetEntity.turn) return;
+
       targetEntity.turn = data.actions;
 
       const opponent = Array.from(currentRoom.values()).find(
@@ -139,14 +143,18 @@ function createServer() {
 
       if (opponent.turn && targetEntity.turn) {
         if (opponent.turn.attack !== targetEntity.turn.defend) {
-          targetEntity.health -= 10;
+          targetEntity.health -= 1;
         }
 
         if (targetEntity.turn.attack !== opponent.turn.defend) {
-          opponent.health -= 10;
+          opponent.health -= 1;
         }
 
-        if (targetEntity.health <= 0 || opponent.health <= 0) {
+        if (targetEntity.health <= 0 && opponent.health <= 0) {
+          io.to(data.roomName).emit("gameOver", {
+            winner: null,
+          });
+        } else if (targetEntity.health <= 0 || opponent.health <= 0) {
           io.to(data.roomName).emit("gameOver", {
             winner: targetEntity.health <= 0 ? opponent.id : targetEntity.id,
           });
