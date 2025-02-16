@@ -1,0 +1,37 @@
+name: Deploy to EC2 and Rebuild Docker
+
+on:
+  push:
+    branches:
+      - main # Adjust to your deployment branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up SSH
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Step 3: Deploy to EC2
+      - name: Deploy and Rebuild Docker on EC2
+        env:
+          EC2_USER: ec2-user # Update with your EC2 username (e.g., ubuntu for Ubuntu)
+          EC2_HOST: ${{ secrets.EC2_HOST }} # Public IP or hostname of your EC2 instance
+        run: |
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            echo "Connected to EC2 instance"
+            cd nitrix/nitrix-game/ # Path to your project on the EC2 instance
+            git pull origin main      # Pull the latest changes from your GitHub repository
+            docker-compose down       # Stop the existing Docker containers
+            docker-compose build      # Build the new Docker image
+            docker-compose up -d      # Start the updated containers in detached mode
+            echo "Deployment completed!"
+          EOF
