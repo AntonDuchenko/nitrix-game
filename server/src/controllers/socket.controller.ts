@@ -144,10 +144,12 @@ export function handleAttack(
 
     if (targetEntity.health <= 0 && opponent.health <= 0) {
       io.to(data.roomName).emit("gameOver", { winner: null });
+      removeRoom(data.roomName);
     } else if (targetEntity.health <= 0 || opponent.health <= 0) {
       io.to(data.roomName).emit("gameOver", {
         winner: targetEntity.health <= 0 ? opponent.id : targetEntity.id,
       });
+      removeRoom(data.roomName);
     }
 
     targetEntity.turn = null;
@@ -170,6 +172,7 @@ export function handleDisconnect(socket: IAuthSocket, io: Server) {
   for (const [room, entities] of splitRooms()) {
     if (entities.players.has(playerId)) {
       const playerEntity = entities.players.get(playerId);
+
       if (playerEntity) {
         disconnectedPlayers.set(playerId, { room, entity: playerEntity });
       }

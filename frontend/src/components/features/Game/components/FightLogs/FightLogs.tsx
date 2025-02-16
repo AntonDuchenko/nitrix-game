@@ -20,7 +20,7 @@ export const FightLogs: React.FC<LogsProps> = ({ logs }) => {
         <span>logs</span>
       </div>
 
-      {isShow && logs.length > 0 && (
+      {isShow && logs && logs.length > 0 && (
         <div className={styles.logsList}>
           {logs.map((log, index) => (
             <div key={index} className={styles.log}>
