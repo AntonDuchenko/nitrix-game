@@ -1,7 +1,8 @@
 import { Button, Loader } from "../../../common";
+import { Logs } from "../components/Logs/Logs";
 import { Player } from "../components/Player/Player";
 import { ResultModal } from "../components/ResultModal/ResultModal";
-import { BodyParts } from '../types/game.types';
+import { BodyParts, ILog } from "../types/game.types";
 import styles from "./GameView.module.scss";
 
 interface GameViewProps {
@@ -14,18 +15,15 @@ interface GameViewProps {
   setOpponentDamageGotten: React.Dispatch<React.SetStateAction<number | null>>;
   attackBodyPart: BodyParts | null;
   defendBodyPart: BodyParts | null;
-  onChangeAttackBodyPart: (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => void;
-  onChangeDefendBodyPart: (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => void;
+  onChangeAttackBodyPart: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChangeDefendBodyPart: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onAttack: () => void;
   isWaiting: boolean;
   isWinner: boolean | null | undefined;
   onPlayAgain: () => void;
   onQuit: () => void;
   maxHealth: number;
+  logs: ILog[];
 }
 
 export const GameView: React.FC<GameViewProps> = ({
@@ -46,6 +44,7 @@ export const GameView: React.FC<GameViewProps> = ({
   onPlayAgain,
   onQuit,
   maxHealth,
+  logs
 }) => {
   return (
     <div className={styles.game}>
@@ -69,6 +68,8 @@ export const GameView: React.FC<GameViewProps> = ({
               bodyPart={defendBodyPart}
               maxHealth={maxHealth}
             />
+
+            <Logs logs={logs} />
 
             <Player
               health={opponentHealth}

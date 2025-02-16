@@ -1,7 +1,9 @@
 import { Server } from "socket.io";
 import { IAttackDto, IAuthSocket, IEntity } from "../types";
 import {
+  addLog,
   checkRoom,
+  getLog,
   getRoom,
   removeRoom,
   setRoom,
@@ -31,7 +33,7 @@ export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   };
 
   if (!checkRoom(roomName)) {
-    setRoom(roomName, new Map<string, IEntity>());
+    setRoom(roomName, { players: new Map<string, IEntity>(), log: [] });
   }
 
   const roomEntities = getRoom(roomName);
@@ -104,10 +106,41 @@ export function handleAttack(
   if (!opponent) return;
 
   if (opponent.turn && targetEntity.turn) {
-    if (opponent.turn.attack !== targetEntity.turn.defend)
+    if (opponent.turn.attack !== targetEntity.turn.defend) {
       targetEntity.health -= DAMAGE;
-    if (targetEntity.turn.attack !== opponent.turn.defend)
+
+      addLog(data.roomName, {
+        playerId: targetEntity.id,
+        actions: targetEntity.turn,
+        damage: DAMAGE,
+      });
+    }
+
+    if (opponent.turn.attack === targetEntity.turn.defend) {
+      addLog(data.roomName, {
+        playerId: targetEntity.id,
+        actions: targetEntity.turn,
+        damage: 0,
+      });
+    }
+
+    if (targetEntity.turn.attack !== opponent.turn.defend) {
       opponent.health -= DAMAGE;
+
+      addLog(data.roomName, {
+        playerId: opponent.id,
+        actions: opponent.turn,
+        damage: DAMAGE,
+      });
+    }
+
+    if (targetEntity.turn.attack === opponent.turn.defend) {
+      addLog(data.roomName, {
+        playerId: opponent.id,
+        actions: opponent.turn,
+        damage: 0,
+      });
+    }
 
     if (targetEntity.health <= 0 && opponent.health <= 0) {
       io.to(data.roomName).emit("gameOver", { winner: null });
@@ -120,10 +153,13 @@ export function handleAttack(
     targetEntity.turn = null;
     opponent.turn = null;
 
-    io.to(data.roomName).emit("entityUpdated", [
-      { entityId: targetEntity.id, updates: { health: targetEntity.health } },
-      { entityId: opponent.id, updates: { health: opponent.health } },
-    ]);
+    io.to(data.roomName).emit("entityUpdated", {
+      entities: [
+        { entityId: targetEntity.id, updates: { health: targetEntity.health } },
+        { entityId: opponent.id, updates: { health: opponent.health } },
+      ],
+      log: getLog(data.roomName),
+    });
   }
 }
 
@@ -132,14 +168,14 @@ export function handleDisconnect(socket: IAuthSocket, io: Server) {
   if (!playerId) return;
 
   for (const [room, entities] of splitRooms()) {
-    if (entities.has(playerId)) {
-      const playerEntity = entities.get(playerId);
+    if (entities.players.has(playerId)) {
+      const playerEntity = entities.players.get(playerId);
       if (playerEntity) {
         disconnectedPlayers.set(playerId, { room, entity: playerEntity });
       }
 
-      entities.delete(playerId);
-      if (entities.size === 0) {
+      entities.players.delete(playerId);
+      if (entities.players.size === 0) {
         removeRoom(room);
       } else {
         io.to(room).emit("playerDisconnected", { playerId });

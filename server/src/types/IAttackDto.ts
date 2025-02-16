@@ -1,7 +1,9 @@
 export interface IAttackDto {
   roomName: string;
-  actions: {
-    attack: string | null;
-    defend: string | null;
-  };
+  actions: IActions;
+}
+
+export interface IActions {
+  attack: string | null;
+  defend: string | null;
 }

@@ -11,3 +11,18 @@ export interface IEntity {
   updates: { health: number };
 }
 
+export interface IActions {
+  attack: string | null;
+  defend: string | null;
+}
+
+export interface ILog {
+  playerId: string;
+  actions: IActions;
+  damage: number;
+}
+
+export interface IUpdateDto {
+  entities: IEntity[];
+  log: ILog[];
+}

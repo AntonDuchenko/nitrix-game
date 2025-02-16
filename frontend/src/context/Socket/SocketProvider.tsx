@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { io, Socket } from "socket.io-client";
-import { SocketContext } from "./SocketContex";
+import { SocketContext } from "./SocketContext";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
 import Cookies from "js-cookie";
 

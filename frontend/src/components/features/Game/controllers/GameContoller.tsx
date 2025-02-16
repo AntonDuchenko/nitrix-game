@@ -3,7 +3,7 @@ import { useSocket } from "../../../../hooks/useSocket";
 import { GameView } from "../views/GameView";
 import { useNavigate } from "react-router";
 import Cookies from "js-cookie";
-import { BodyParts, IEntity } from "../types/game.types";
+import { BodyParts, ILog, IUpdateDto } from "../types/game.types";
 
 const MAX_HEALTH = 10;
 
@@ -19,6 +19,7 @@ export const GameController = () => {
   const [opponentDamageGotten, setOpponentDamageGotten] = useState<
     number | null
   >(null);
+  const [logs, setLogs] = useState<ILog[]>([]);
   const [isWinner, setIsWinner] = useState<boolean | null | undefined>(
     undefined
   );
@@ -55,8 +56,8 @@ export const GameController = () => {
   }, [socket, id]);
 
   useEffect(() => {
-    socket?.on("entityUpdated", (data: IEntity[]) => {
-      data.forEach((entity) => {
+    socket?.on("entityUpdated", (data: IUpdateDto) => {
+      data.entities.forEach((entity) => {
         if (entity.entityId === id) {
           setMyDamageGotten(myHealth - entity.updates.health);
           setMyHealth(entity.updates.health);
@@ -65,6 +66,8 @@ export const GameController = () => {
           setOpponentHealth(entity.updates.health);
         }
       });
+
+      setLogs(data.log);
 
       setAttackBodyPart(null);
       setDefendBodyPart(null);
@@ -164,6 +167,7 @@ export const GameController = () => {
       onPlayAgain={handlePlayAgain}
       onQuit={handleQuit}
       maxHealth={MAX_HEALTH}
+      logs={logs}
     />
   );
 };

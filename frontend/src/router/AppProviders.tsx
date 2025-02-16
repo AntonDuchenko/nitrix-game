@@ -1,6 +1,6 @@
 import { BrowserRouter } from "react-router";
-import { AuthProvider } from "../context/AuthProvider";
-import { SocketProvider } from "../context/SocketProvider";
+import { AuthProvider } from '../context/Auth/AuthProvider';
+import { SocketProvider } from '../context/Socket/SocketProvider';
 
 export const AppProviders = ({ children }: { children: React.ReactNode }) => {
   return (

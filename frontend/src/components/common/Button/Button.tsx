@@ -1,6 +1,6 @@
 import classNames from "classnames";
-import { Loader } from "../Loader/Loader";
 import styles from "./Button.module.scss";
+import { Loader } from '../Loader/Loader';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;

@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import Coockies from "js-cookie";
 import { AuthContext } from "./AuthContext";
-import { checkToken } from "../services/api/auth";
+import { checkToken } from '../../services/api/auth';
 
 interface AuthProviderProps {
   children: ReactNode;
