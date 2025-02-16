@@ -1,0 +1,47 @@
+.logBtn {
+  position: absolute;
+  left: 50%;
+  top: 15vh;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 100px;
+  background: url("../../../../../assets/logs-book.webp") center center / contain no-repeat;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  color: #fff;
+  width: 100%;
+  font-weight: 600;
+  font-size: 12px;
+  bottom: 20px;
+}
+
+.logsList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: absolute;
+  overflow: auto;
+  scrollbar-width: none;
+  max-height: 300px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 100%;
+  max-width: 300px;
+  background: #888686;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.log {
+  background: #eddada;
+  border-radius: inherit;
+  padding: 20px;
+}

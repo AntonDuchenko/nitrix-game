@@ -1,5 +1,5 @@
 import { Button, Loader } from "../../../common";
-import { Logs } from "../components/Logs/Logs";
+import { FightLogs } from "../components/FightLogs/FightLogs";
 import { Player } from "../components/Player/Player";
 import { ResultModal } from "../components/ResultModal/ResultModal";
 import { BodyParts, ILog } from "../types/game.types";
@@ -44,7 +44,7 @@ export const GameView: React.FC<GameViewProps> = ({
   onPlayAgain,
   onQuit,
   maxHealth,
-  logs
+  logs,
 }) => {
   return (
     <div className={styles.game}>
@@ -69,7 +69,7 @@ export const GameView: React.FC<GameViewProps> = ({
               maxHealth={maxHealth}
             />
 
-            <Logs logs={logs} />
+            <FightLogs logs={logs} />
 
             <Player
               health={opponentHealth}
