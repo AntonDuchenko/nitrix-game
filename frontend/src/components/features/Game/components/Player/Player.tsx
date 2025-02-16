@@ -1,7 +1,7 @@
 import styles from "./Player.module.scss";
 import classNames from "classnames";
 import { BodyParts } from "../../types/game.types";
-import { ImageEnum } from "../../../../../ImageEnum";
+import { ImageEnum } from "../../../../../types/ImageEnum";
 import { useCoordinate } from "../../../../../hooks/useCoordinate";
 
 const bodyParts = Object.values(BodyParts);
