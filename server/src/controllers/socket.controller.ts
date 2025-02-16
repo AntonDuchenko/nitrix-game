@@ -9,14 +9,13 @@ import {
   setRoom,
   splitRooms,
 } from "../services/socket.service";
+import constants from "../constants";
 
 const disconnectedPlayers = new Map<
   string,
   { room: string; entity: IEntity }
 >();
 let roomName = `room-${Date.now()}`;
-const MAX_HEALTH = 10;
-const DAMAGE = 1;
 
 export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   socket.join(roomName);
@@ -29,7 +28,7 @@ export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   const defaultEntity: IEntity = {
     id: playerId,
     type: "player",
-    health: MAX_HEALTH,
+    health: constants.MAX_HEALTH,
   };
 
   if (!checkRoom(roomName)) {
@@ -39,7 +38,7 @@ export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   const roomEntities = getRoom(roomName);
   roomEntities?.set(playerId, defaultEntity);
 
-  if (clientsInRoom === 2 && roomEntities) {
+  if (clientsInRoom === constants.MAX_PLAYERS && roomEntities) {
     io.sockets.in(roomName).emit("startGame", {
       roomName,
       players: Array.from(roomEntities.values()),
@@ -107,12 +106,12 @@ export function handleAttack(
 
   if (opponent.turn && targetEntity.turn) {
     if (opponent.turn.attack !== targetEntity.turn.defend) {
-      targetEntity.health -= DAMAGE;
+      targetEntity.health -= constants.DAMAGE;
 
       addLog(data.roomName, {
         playerId: targetEntity.id,
         actions: targetEntity.turn,
-        damage: DAMAGE,
+        damage: constants.DAMAGE,
       });
     }
 
@@ -125,12 +124,12 @@ export function handleAttack(
     }
 
     if (targetEntity.turn.attack !== opponent.turn.defend) {
-      opponent.health -= DAMAGE;
+      opponent.health -= constants.DAMAGE;
 
       addLog(data.roomName, {
         playerId: opponent.id,
         actions: opponent.turn,
-        damage: DAMAGE,
+        damage: constants.DAMAGE,
       });
     }
 

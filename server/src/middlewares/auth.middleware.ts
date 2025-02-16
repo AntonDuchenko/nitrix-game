@@ -2,8 +2,14 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import codes from "./../constants";
 
+interface CustomRequest extends Request {
+  user?: {
+    id: string;
+  };
+}
+
 export const authenticateToken = (
-  req: Request,
+  req: CustomRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -39,7 +45,7 @@ export const authenticateToken = (
 
     const decodedPayload = user as JwtPayload;
 
-    req.body = {
+    req.user = {
       id: decodedPayload.id,
     };
 

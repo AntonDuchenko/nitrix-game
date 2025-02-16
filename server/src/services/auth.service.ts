@@ -1,5 +1,6 @@
 import user from "../models/user";
 import jwt from "jsonwebtoken";
+import constants from "../constants";
 
 export const getUserByEmail = async (email: string) => {
   return await user.findOne({ email });
@@ -14,11 +15,11 @@ export const genarateToken = (id: string) => {
     {
       id,
     },
-    process.env.JWT_SECRET ?? "default-secret",
+    constants.JWT_SECRET,
     { expiresIn: "1d" }
   );
 };
 
 export const isTokenValid = (token: string) => {
-  return jwt.verify(token, process.env.JWT_SECRET ?? "default-secret");
+  return jwt.verify(token, constants.JWT_SECRET);
 };

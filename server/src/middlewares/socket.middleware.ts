@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { IAuthSocket } from "../types";
+import constants from "../constants";
 
 export function authenticateSocket(
   socket: IAuthSocket,
@@ -14,7 +15,7 @@ export function authenticateSocket(
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET ?? "default-secret"
+      constants.JWT_SECRET
     ) as JwtPayload;
     socket.user = decoded;
     next();
