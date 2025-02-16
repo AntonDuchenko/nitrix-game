@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import styles from "./ResultModal.module.scss";
-import { Button } from "../Button/Button";
 import classNames from "classnames";
+import { Button } from '../../../../common';
 
 interface ResultModalProps {
   onQuit: () => void;

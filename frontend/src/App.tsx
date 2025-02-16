@@ -1,17 +1,11 @@
-import { BrowserRouter } from "react-router";
 import { AppRouter } from "./router/AppRouter";
-import { AuthProvider } from "./context/AuthProvider";
-import { SocketProvider } from "./context/SocketProvider";
+import { AppProviders } from "./router/AppProviders";
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <SocketProvider>
-          <AppRouter />
-        </SocketProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <AppProviders>
+      <AppRouter />
+    </AppProviders>
   );
 }
 

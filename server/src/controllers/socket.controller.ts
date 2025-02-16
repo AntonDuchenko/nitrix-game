@@ -13,6 +13,8 @@ const disconnectedPlayers = new Map<
   { room: string; entity: IEntity }
 >();
 let roomName = `room-${Date.now()}`;
+const MAX_HEALTH = 10;
+const DAMAGE = 1;
 
 export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   socket.join(roomName);
@@ -22,7 +24,11 @@ export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   const playerId = socket.user?.id;
   if (!playerId) return;
 
-  const defaultEntity: IEntity = { id: playerId, type: "player", health: 10 };
+  const defaultEntity: IEntity = {
+    id: playerId,
+    type: "player",
+    health: MAX_HEALTH,
+  };
 
   if (!checkRoom(roomName)) {
     setRoom(roomName, new Map<string, IEntity>());
@@ -99,8 +105,9 @@ export function handleAttack(
 
   if (opponent.turn && targetEntity.turn) {
     if (opponent.turn.attack !== targetEntity.turn.defend)
-      targetEntity.health -= 1;
-    if (targetEntity.turn.attack !== opponent.turn.defend) opponent.health -= 1;
+      targetEntity.health -= DAMAGE;
+    if (targetEntity.turn.attack !== opponent.turn.defend)
+      opponent.health -= DAMAGE;
 
     if (targetEntity.health <= 0 && opponent.health <= 0) {
       io.to(data.roomName).emit("gameOver", { winner: null });

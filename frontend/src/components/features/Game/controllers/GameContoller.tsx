@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
-import { Button } from "../../components/Button/Button";
-import { Player } from "../../components/Player/Player";
-import { BodyParts, IEntity } from "../../types";
-import styles from "./Game.module.scss";
-import { useSocket } from "../../hooks/useSocket";
-import { Loader } from "../../components/Loader/Loader";
-import Cookies from "js-cookie";
+import { useSocket } from "../../../../hooks/useSocket";
+import { GameView } from "../views/GameView";
 import { useNavigate } from "react-router";
-import { ResultModal } from "../../components/ResultModal/ResultModal";
+import Cookies from "js-cookie";
+import { BodyParts, IEntity } from "../types/game.types";
 
-export const Game = () => {
+const MAX_HEALTH = 10;
+
+export const GameController = () => {
   const { socket } = useSocket();
   const [attackBodyPart, setAttackBodyPart] = useState<BodyParts | null>(null);
   const [defendBodyPart, setDefendBodyPart] = useState<BodyParts | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
-  const [myHealth, setMyHealth] = useState(10);
-  const [opponentHealth, setOpponentHealth] = useState(10);
+  const [myHealth, setMyHealth] = useState(MAX_HEALTH);
+  const [opponentHealth, setOpponentHealth] = useState(MAX_HEALTH);
   const [myDamageGotten, setMyDamageGotten] = useState<number | null>(null);
   const [opponentDamageGotten, setOpponentDamageGotten] = useState<
     number | null
@@ -50,10 +48,14 @@ export const Game = () => {
 
       setGameStarted(true);
     });
+
+    return () => {
+      socket?.off("startGame");
+    };
   }, [socket, id]);
 
   useEffect(() => {
-    const handleEntityUpdated = (data: IEntity[]) => {
+    socket?.on("entityUpdated", (data: IEntity[]) => {
       data.forEach((entity) => {
         if (entity.entityId === id) {
           setMyDamageGotten(myHealth - entity.updates.health);
@@ -67,12 +69,10 @@ export const Game = () => {
       setAttackBodyPart(null);
       setDefendBodyPart(null);
       setIsWaiting(false);
-    };
-
-    socket?.on("entityUpdated", handleEntityUpdated);
+    });
 
     return () => {
-      socket?.off("entityUpdated", handleEntityUpdated);
+      socket?.off("entityUpdated");
     };
   }, [socket, id, myHealth, opponentHealth]);
 
@@ -81,6 +81,10 @@ export const Game = () => {
       Cookies.remove("roomName");
       navigate("/game", { replace: true });
     });
+
+    return () => {
+      socket?.off("reconnectError");
+    };
   }, [socket]);
 
   useEffect(() => {
@@ -99,6 +103,10 @@ export const Game = () => {
           break;
       }
     });
+
+    return () => {
+      socket?.off("gameOver");
+    };
   }, [id, socket]);
 
   const handleChangeAttackBodyPart = (
@@ -138,54 +146,24 @@ export const Game = () => {
   };
 
   return (
-    <div className={styles.game}>
-      {!gameStarted ? (
-        <div className={styles.position}>
-          You are alone in the queue. Please wait your opponent.
-          <Loader />
-          <Button className={styles.quitBtn} onClick={handleQuit}>
-            Quit
-          </Button>
-        </div>
-      ) : (
-        <>
-          <div className={styles.players}>
-            <Player
-              health={myHealth}
-              damage={myDamageGotten}
-              setDamage={setMyDamageGotten}
-              type="defender"
-              onChangeBodyPart={handleChangeDefendBodyPart}
-              bodyPart={defendBodyPart}
-            />
-
-            <Player
-              health={opponentHealth}
-              damage={opponentDamageGotten}
-              setDamage={setOpponentDamageGotten}
-              type="attacker"
-              onChangeBodyPart={handleChangeAttackBodyPart}
-              bodyPart={attackBodyPart}
-            />
-          </div>
-
-          <Button
-            onClick={handleAttack}
-            disabled={!attackBodyPart || !defendBodyPart || isWaiting}
-            className={styles.attackBtn}
-          >
-            {isWaiting ? "Waiting for your opponent" : "Attack"}
-          </Button>
-        </>
-      )}
-
-      {isWinner !== undefined && (
-        <ResultModal
-          onQuit={handleQuit}
-          onPlayAgain={handlePlayAgain}
-          isWinner={isWinner}
-        />
-      )}
-    </div>
+    <GameView
+      gameStarted={gameStarted}
+      myHealth={myHealth}
+      opponentHealth={opponentHealth}
+      myDamageGotten={myDamageGotten}
+      setMyDamageGotten={setMyDamageGotten}
+      opponentDamageGotten={opponentDamageGotten}
+      setOpponentDamageGotten={setOpponentDamageGotten}
+      attackBodyPart={attackBodyPart}
+      defendBodyPart={defendBodyPart}
+      onChangeAttackBodyPart={handleChangeAttackBodyPart}
+      onChangeDefendBodyPart={handleChangeDefendBodyPart}
+      onAttack={handleAttack}
+      isWaiting={isWaiting}
+      isWinner={isWinner}
+      onPlayAgain={handlePlayAgain}
+      onQuit={handleQuit}
+      maxHealth={MAX_HEALTH}
+    />
   );
 };

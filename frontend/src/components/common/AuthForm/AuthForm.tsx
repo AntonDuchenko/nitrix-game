@@ -1,8 +1,8 @@
 import { SubmitHandler, useForm } from "react-hook-form";
-import styles from "./Form.module.scss";
+import styles from "./AuthForm.module.scss";
 import { Link, useLocation, useNavigate } from "react-router";
-import { login, registration } from "../../utils/api/auth";
-import { useAuth } from "../../hooks/useAuth";
+import { login, registration } from "../../../services/api/auth";
+import { useAuth } from "../../../hooks/useAuth";
 import { Button } from "../Button/Button";
 import { useState } from "react";
 
@@ -11,7 +11,7 @@ type Inputs = {
   password: string;
 };
 
-export const Form = () => {
+export const AuthForm = () => {
   const { login: authenticate } = useAuth();
   const path = useLocation().pathname;
   const isLogin = path === "/login";

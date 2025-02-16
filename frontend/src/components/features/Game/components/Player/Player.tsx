@@ -1,11 +1,10 @@
 import styles from "./Player.module.scss";
-import { ImageEnum } from "../../ImageEnum";
-import { BodyParts } from "../../types";
 import classNames from "classnames";
-import { useEffect, useState } from "react";
+import { BodyParts } from "../../types/game.types";
+import { ImageEnum } from "../../../../../ImageEnum";
+import { useCoordinate } from "../../../../../hooks/useCoordinate";
 
 const bodyParts = Object.values(BodyParts);
-const MAX_HEALTH = 10;
 
 interface PlayerProps {
   health: number;
@@ -14,6 +13,7 @@ interface PlayerProps {
   setDamage: React.Dispatch<React.SetStateAction<number | null>>;
   onChangeBodyPart: (event: React.ChangeEvent<HTMLInputElement>) => void;
   bodyPart: BodyParts | null;
+  maxHealth: number;
 }
 
 export const Player: React.FC<PlayerProps> = ({
@@ -23,24 +23,11 @@ export const Player: React.FC<PlayerProps> = ({
   setDamage,
   onChangeBodyPart,
   bodyPart,
+  maxHealth,
 }) => {
   const isMe = type === "defender";
-  const [coordinate, setCoordinate] = useState(0);
 
-  useEffect(() => {
-    if (damage !== null) {
-      setCoordinate(Math.floor(Math.random() * 80) + 10);
-
-      const timeOut = setTimeout(() => {
-        setDamage(null);
-        clearTimeout(timeOut);
-      }, 1000);
-
-      return () => {
-        clearTimeout(timeOut);
-      };
-    }
-  }, [damage]);
+  const { coordinate } = useCoordinate(damage, setDamage);
 
   return (
     <div
@@ -51,7 +38,7 @@ export const Player: React.FC<PlayerProps> = ({
       <div className={styles.healthContainer}>
         <progress className={styles.healthBar} value={health} max="10" />
         <span className={styles.healthValue}>
-          {health}/{MAX_HEALTH}
+          {health}/{maxHealth}
         </span>
         {damage !== null && (
           <span
