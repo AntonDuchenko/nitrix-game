@@ -29,6 +29,11 @@ export const Game = () => {
 
   useEffect(() => {
     socket?.on("startGame", (data) => {
+      if (data.turn) {
+        setAttackBodyPart(data.turn.attack as BodyParts);
+        setDefendBodyPart(data.turn.defend as BodyParts);
+        setIsWaiting(true);
+      }
       setMyHealth(
         data.players.find(
           (player: { id: string; type: string; health: number }) =>

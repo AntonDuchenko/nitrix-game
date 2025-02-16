@@ -4,7 +4,7 @@ import {
   genarateToken,
   getUserByEmail,
   isTokenValid,
-} from "../services/auth.services";
+} from "../services/auth.service";
 import codeStatuses from "../constants";
 import bcrypt from "bcrypt";
 import { handleError } from "../utils/handleError";

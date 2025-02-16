@@ -6,6 +6,6 @@ export interface IEntity {
 }
 
 interface ITurn {
-  attack: string;
-  defend: string;
+  attack: string | null;
+  defend: string | null;
 }
