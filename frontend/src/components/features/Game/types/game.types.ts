@@ -17,9 +17,14 @@ export interface IActions {
 }
 
 export interface ILog {
-  playerId: string;
+  player: PlayerData;
   actions: IActions;
   damage: number;
+}
+
+export interface PlayerData {
+  playerId: string;
+  email: string;
 }
 
 export interface IUpdateDto {

@@ -1,7 +1,12 @@
 import { IActions } from "./IAttackDto";
 
 export interface ILog {
-  playerId: string;
+  player: PlayerData;
   actions: IActions;
   damage: number;
+}
+
+export interface PlayerData {
+  playerId: string;
+  email: string;
 }

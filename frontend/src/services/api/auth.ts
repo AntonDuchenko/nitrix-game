@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { handleApiError } from "../utils/hadleApiError";
 import { instance } from "./instance";
 import Cookies from "js-cookie";
 
@@ -14,7 +15,7 @@ export const registration = async ({
 
     return response.data;
   } catch (error) {
-    throw new Error("Registration failed");
+    handleApiError(error);
   }
 };
 
@@ -32,7 +33,7 @@ export const login = async ({
 
     return response.data;
   } catch (error) {
-    throw new Error("Login failed");
+    handleApiError(error);
   }
 };
 
@@ -46,6 +47,6 @@ export const checkToken = async (token: string) => {
 
     return response.data;
   } catch (error) {
-    throw new Error("Login failed");
+    handleApiError(error);
   }
 };

@@ -5,6 +5,7 @@ import { login, registration } from "../../../services/api/auth";
 import { useAuth } from "../../../hooks/useAuth";
 import { Button } from "../Button/Button";
 import { useState } from "react";
+import { toastError } from "../../../services/utils/toastError";
 
 type Inputs = {
   email: string;
@@ -37,10 +38,11 @@ export const AuthForm = () => {
           password: data.password,
         });
 
+        toastError("Registration successful");
         navigate("/login");
       }
     } catch (error) {
-      console.log(error);
+      toastError((error as Error).message);
     } finally {
       setLoading(false);
     }

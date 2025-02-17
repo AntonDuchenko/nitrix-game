@@ -10,6 +10,7 @@ import {
   splitRooms,
 } from "../services/socket.service";
 import constants from "../constants";
+import { getUserById } from "../services/auth.service";
 
 const disconnectedPlayers = new Map<
   string,
@@ -83,7 +84,7 @@ export function handleReconnectRoom(socket: IAuthSocket, io: Server) {
   }
 }
 
-export function handleAttack(
+export async function handleAttack(
   socket: IAuthSocket,
   io: Server,
   data: IAttackDto
@@ -105,11 +106,19 @@ export function handleAttack(
   if (!opponent) return;
 
   if (opponent.turn && targetEntity.turn) {
+    const targetData = await getUserById(targetEntity.id);
+    const opponentData = await getUserById(opponent.id);
+    if (!targetData) return;
+    if (!opponentData) return;
+
     if (opponent.turn.attack !== targetEntity.turn.defend) {
       targetEntity.health -= constants.DAMAGE;
 
       addLog(data.roomName, {
-        playerId: targetEntity.id,
+        player: {
+          playerId: targetData.id,
+          email: targetData?.email,
+        },
         actions: targetEntity.turn,
         damage: constants.DAMAGE,
       });
@@ -117,7 +126,10 @@ export function handleAttack(
 
     if (opponent.turn.attack === targetEntity.turn.defend) {
       addLog(data.roomName, {
-        playerId: targetEntity.id,
+        player: {
+          playerId: targetData.id,
+          email: targetData?.email,
+        },
         actions: targetEntity.turn,
         damage: 0,
       });
@@ -127,7 +139,10 @@ export function handleAttack(
       opponent.health -= constants.DAMAGE;
 
       addLog(data.roomName, {
-        playerId: opponent.id,
+        player: {
+          playerId: opponentData.id,
+          email: opponentData.email,
+        },
         actions: opponent.turn,
         damage: constants.DAMAGE,
       });
@@ -135,7 +150,10 @@ export function handleAttack(
 
     if (targetEntity.turn.attack === opponent.turn.defend) {
       addLog(data.roomName, {
-        playerId: opponent.id,
+        player: {
+          playerId: opponentData.id,
+          email: opponentData.email,
+        },
         actions: opponent.turn,
         damage: 0,
       });

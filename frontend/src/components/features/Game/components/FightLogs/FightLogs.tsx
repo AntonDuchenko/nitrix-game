@@ -1,17 +1,14 @@
-import { useState } from "react";
 import { ILog } from "../../types/game.types";
 import styles from "./FightLogs.module.scss";
+import { useShowLog } from "../../hooks/useShowLog";
+import classNames from "classnames";
 
 interface LogsProps {
   logs: ILog[];
 }
 
 export const FightLogs: React.FC<LogsProps> = ({ logs }) => {
-  const [isShow, setIsShow] = useState(false);
-
-  const handleClick = () => {
-    setIsShow((current) => !current);
-  };
+  const { isShow, handleClick } = useShowLog();
 
   return (
     <div className={styles.logBtn} onClick={handleClick}>
@@ -24,8 +21,20 @@ export const FightLogs: React.FC<LogsProps> = ({ logs }) => {
         <div className={styles.logsList}>
           {logs.map((log, index) => (
             <div key={index} className={styles.log}>
-              Player {log.playerId} atacked {log.actions.attack} and defended{" "}
-              {log.actions.defend} with {log.damage} damage
+              Player <span className={styles.player}>{log.player.email}</span> atacked{" "}
+              <span className={styles.attack}>{log.actions.attack}</span> and
+              defended{" "}
+              <span className={styles.defend}>
+                {log.actions.defend}
+              </span> with{" "}
+              <span
+                className={classNames(styles.defend, {
+                  [styles.attack]: log.damage > 0,
+                })}
+              >
+                {log.damage}
+              </span>{" "}
+              damage.
             </div>
           ))}
         </div>
