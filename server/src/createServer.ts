@@ -1,10 +1,9 @@
 import express, { json } from "express";
+import WebSocket from "ws";
 import "dotenv/config";
 import cors from "cors";
 import connectDB from "./db";
 import authRouter from "./router/auth.router";
-import { Server } from "socket.io";
-import http from "http";
 import { initSocketController } from "./router/socket.router";
 
 function createServer() {
@@ -15,14 +14,9 @@ function createServer() {
   app.use(cors());
   app.use("/auth", authRouter);
 
-  const server = http.createServer(app);
-  const io = new Server(server, {
-    transports: ["websocket"],
-  });
+  const wss = new WebSocket.Server({ port: 4000 }, () => console.log("Socket running on port 4000"))
 
-  initSocketController(io);
-
-  server.listen(4000, () => console.log("Socket running on port 4000"));
+  initSocketController(wss);
 
   return app;
 }

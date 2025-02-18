@@ -9,10 +9,16 @@ export const StartGameController = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    socket?.on("joinedRoom", (data) => {
-      Cookies.set("roomName", data.roomName);
-      navigate("./play");
-    });
+    if (socket) {
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "joinedRoom") {
+          Cookies.set("roomName", data.payload.roomName);
+          navigate("./play");
+        }
+      };
+    }
   }, [socket]);
 
   useEffect(() => {

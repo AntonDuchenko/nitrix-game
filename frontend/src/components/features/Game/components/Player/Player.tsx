@@ -28,6 +28,7 @@ export const Player: React.FC<PlayerProps> = ({
   const isMe = type === "defender";
 
   const { coordinate } = useCoordinate(damage, setDamage);
+  console.log(damage);
 
   return (
     <div

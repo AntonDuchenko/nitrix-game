@@ -1,5 +1,5 @@
-import { Server } from "socket.io";
-import { IAttackDto, IAuthSocket, IEntity } from "../types";
+import WebSocket from "ws";
+import { IAttackDto, IEntity } from "../types";
 import {
   addLog,
   checkRoom,
@@ -12,22 +12,61 @@ import {
 import constants from "../constants";
 import { getUserById } from "../services/auth.service";
 
+interface ExtendedWebSocket extends WebSocket {
+  userId?: string;
+  roomName?: string;
+}
+
+interface Message {
+  type: string;
+  payload: unknown;
+}
+
 const disconnectedPlayers = new Map<
   string,
   { room: string; entity: IEntity }
 >();
 let roomName = `room-${Date.now()}`;
 
-export function handleJoinRoom(socket: IAuthSocket, io: Server) {
-  socket.join(roomName);
-  socket.emit("joinedRoom", { roomName });
+function broadcastToRoom(
+  wss: WebSocket.Server,
+  room: string,
+  message: Message,
+  sender?: WebSocket
+) {
+  wss.clients.forEach((client: ExtendedWebSocket) => {
+    if (
+      client.roomName === room &&
+      client !== sender &&
+      client.readyState === WebSocket.OPEN
+    ) {
+      client.send(JSON.stringify(message));
+    }
+  });
+}
 
-  const clientsInRoom = io.sockets.adapter.rooms.get(roomName)?.size || 0;
-  const playerId = socket.user?.id;
-  if (!playerId) return;
+export function handleJoinRoom(
+  socket: ExtendedWebSocket,
+  wss: WebSocket.Server
+) {
+  // console.log("handleJoinRoom", socket.userId, socket);
+
+  if (!socket.userId) return;
+
+  socket.roomName = roomName;
+  socket.send(
+    JSON.stringify({
+      type: "joinedRoom",
+      payload: { roomName },
+    })
+  );
+
+  const clientsInRoom = Array.from(wss.clients).filter(
+    (client: ExtendedWebSocket) => client.roomName === roomName
+  ).length;
 
   const defaultEntity: IEntity = {
-    id: playerId,
+    id: socket.userId,
     type: "player",
     health: constants.MAX_HEALTH,
   };
@@ -37,108 +76,115 @@ export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   }
 
   const roomEntities = getRoom(roomName);
-  roomEntities?.set(playerId, defaultEntity);
+  if (roomEntities) {
+    roomEntities.set(socket.userId, defaultEntity);
+  }
 
   if (clientsInRoom === constants.MAX_PLAYERS && roomEntities) {
-    io.sockets.in(roomName).emit("startGame", {
-      roomName,
-      players: Array.from(roomEntities.values()),
-      turn: null,
-    });
+    const gameStartMessage = {
+      type: "startGame",
+      payload: {
+        roomName,
+        players: Array.from(roomEntities.values()),
+        turn: null,
+      },
+    };
+
+    broadcastToRoom(wss, roomName, gameStartMessage);
+    socket.send(JSON.stringify(gameStartMessage));
 
     roomName = `room-${Date.now()}`;
   }
 }
 
-export function handleReconnectRoom(socket: IAuthSocket, io: Server) {
-  const playerId = socket.user?.id;
-  if (!playerId) return;
+export function handleReconnectRoom(socket: ExtendedWebSocket) {
+  if (!socket.userId) return;
 
-  const playerData = disconnectedPlayers.get(playerId);
+  const playerData = disconnectedPlayers.get(socket.userId);
   if (!playerData) {
-    socket.emit("reconnectError");
+    socket.send(JSON.stringify({ type: "reconnectError" }));
     return;
   }
 
   const { room, entity } = playerData;
   if (checkRoom(room)) {
-    socket.join(room);
-    entity.id = playerId;
+    socket.roomName = room;
+    entity.id = socket.userId;
     const roomEntities = getRoom(room);
 
     if (!roomEntities) return;
 
-    roomEntities?.set(playerId, entity);
-    disconnectedPlayers.delete(playerId);
+    roomEntities.set(socket.userId, entity);
+    disconnectedPlayers.delete(socket.userId);
 
-    io.to(socket.id).emit("startGame", {
-      roomName: room,
-      players: Array.from(roomEntities.values()).map(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        ({ turn, ...rest }) => rest
-      ),
-      turn: playerData.entity.turn,
-    });
+    socket.send(
+      JSON.stringify({
+        type: "startGame",
+        payload: {
+          roomName: room,
+          players: Array.from(roomEntities.values()).map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ({ turn, ...rest }) => rest
+          ),
+          turn: playerData.entity.turn,
+        },
+      })
+    );
 
-    console.log(`Player ${playerId} reconnected to room ${room}`);
+    console.log(`Player ${socket.userId} reconnected to room ${room}`);
   }
 }
 
 export async function handleAttack(
-  socket: IAuthSocket,
-  io: Server,
+  socket: ExtendedWebSocket,
+  wss: WebSocket.Server,
   data: IAttackDto
 ) {
-  const playerId = socket.user?.id;
-  if (!playerId) return;
+  if (!socket.userId || !socket.roomName) return;
 
   const currentRoom = getRoom(data.roomName);
   if (!currentRoom) return;
 
-  const targetEntity = currentRoom.get(playerId);
+  const targetEntity = currentRoom.get(socket.userId);
   if (!targetEntity || !data.actions.attack || targetEntity.turn) return;
 
   targetEntity.turn = data.actions;
 
   const opponent = Array.from(currentRoom.values()).find(
-    (entity) => entity.id !== playerId
+    (entity) => entity.id !== socket.userId
   );
   if (!opponent) return;
 
   if (opponent.turn && targetEntity.turn) {
     const targetData = await getUserById(targetEntity.id);
     const opponentData = await getUserById(opponent.id);
-    if (!targetData) return;
-    if (!opponentData) return;
+    if (!targetData || !opponentData) return;
 
-    if (opponent.turn.attack !== targetEntity.turn.defend) {
+    // Combat logic
+    if (opponent.turn?.attack !== targetEntity.turn?.defend) {
       targetEntity.health -= constants.DAMAGE;
-
-      addLog(data.roomName, {
+      addLog(roomName, {
         player: {
           playerId: targetData.id,
-          email: targetData?.email,
+          email: targetData.email,
         },
         actions: targetEntity.turn,
         damage: constants.DAMAGE,
       });
-    }
-
-    if (opponent.turn.attack === targetEntity.turn.defend) {
-      addLog(data.roomName, {
+    } else {
+      addLog(roomName, {
         player: {
           playerId: targetData.id,
-          email: targetData?.email,
+          email: targetData.email,
         },
         actions: targetEntity.turn,
         damage: 0,
       });
     }
 
-    if (targetEntity.turn.attack !== opponent.turn.defend) {
+    if (targetEntity.turn?.attack !== opponent.turn?.defend) {
       opponent.health -= constants.DAMAGE;
-
-      addLog(data.roomName, {
+      addLog(roomName, {
         player: {
           playerId: opponentData.id,
           email: opponentData.email,
@@ -146,10 +192,8 @@ export async function handleAttack(
         actions: opponent.turn,
         damage: constants.DAMAGE,
       });
-    }
-
-    if (targetEntity.turn.attack === opponent.turn.defend) {
-      addLog(data.roomName, {
+    } else {
+      addLog(roomName, {
         player: {
           playerId: opponentData.id,
           email: opponentData.email,
@@ -159,12 +203,19 @@ export async function handleAttack(
       });
     }
 
+    // Handle game over conditions
     if (targetEntity.health <= 0 && opponent.health <= 0) {
-      io.to(data.roomName).emit("gameOver", { winner: null });
+      broadcastToRoom(wss, data.roomName, {
+        type: "gameOver",
+        payload: { winner: null },
+      });
       removeRoom(data.roomName);
     } else if (targetEntity.health <= 0 || opponent.health <= 0) {
-      io.to(data.roomName).emit("gameOver", {
-        winner: targetEntity.health <= 0 ? opponent.id : targetEntity.id,
+      broadcastToRoom(wss, data.roomName, {
+        type: "gameOver",
+        payload: {
+          winner: targetEntity.health <= 0 ? opponent.id : targetEntity.id,
+        },
       });
       removeRoom(data.roomName);
     }
@@ -172,37 +223,52 @@ export async function handleAttack(
     targetEntity.turn = null;
     opponent.turn = null;
 
-    io.to(data.roomName).emit("entityUpdated", {
-      entities: [
-        { entityId: targetEntity.id, updates: { health: targetEntity.health } },
-        { entityId: opponent.id, updates: { health: opponent.health } },
-      ],
-      log: getLog(data.roomName),
-    });
+    // Update all clients with new entity states
+    const updateMessage = {
+      type: "entityUpdated",
+      payload: {
+        entities: [
+          {
+            entityId: targetEntity.id,
+            updates: { health: targetEntity.health },
+          },
+          { entityId: opponent.id, updates: { health: opponent.health } },
+        ],
+        log: getLog(data.roomName),
+      },
+    };
+
+    broadcastToRoom(wss, data.roomName, updateMessage);
+    socket.send(JSON.stringify(updateMessage));
   }
 }
 
-export function handleDisconnect(socket: IAuthSocket, io: Server) {
-  const playerId = socket.user?.id;
-  if (!playerId) return;
+export function handleDisconnect(
+  socket: ExtendedWebSocket,
+  wss: WebSocket.Server
+) {
+  if (!socket.userId) return;
 
   for (const [room, entities] of splitRooms()) {
-    if (entities.players.has(playerId)) {
-      const playerEntity = entities.players.get(playerId);
+    if (entities.players.has(socket.userId)) {
+      const playerEntity = entities.players.get(socket.userId);
 
       if (playerEntity) {
-        disconnectedPlayers.set(playerId, { room, entity: playerEntity });
+        disconnectedPlayers.set(socket.userId, { room, entity: playerEntity });
       }
 
-      entities.players.delete(playerId);
+      entities.players.delete(socket.userId);
       if (entities.players.size === 0) {
         removeRoom(room);
       } else {
-        io.to(room).emit("playerDisconnected", { playerId });
+        broadcastToRoom(wss, room, {
+          type: "playerDisconnected",
+          payload: { playerId: socket.userId },
+        });
       }
       break;
     }
   }
 
-  console.log(`User ${playerId} disconnected.`);
+  console.log(`User ${socket.userId} disconnected.`);
 }

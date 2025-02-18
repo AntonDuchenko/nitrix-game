@@ -1,6 +1,6 @@
+import WebSocket from "ws";
 import { JwtPayload } from "jsonwebtoken";
-import { Socket } from "socket.io";
 
-export interface IAuthSocket extends Socket {
-  user?: JwtPayload;
+export interface IAuthSocket extends WebSocket {
+  userId?: JwtPayload;
 }

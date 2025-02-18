@@ -3,7 +3,7 @@ import { useSocket } from "../../../../hooks/useSocket";
 import { GameView } from "../views/GameView";
 import { useNavigate } from "react-router";
 import Cookies from "js-cookie";
-import { BodyParts, ILog, IUpdateDto } from "../types/game.types";
+import { BodyParts, IEntity, ILog } from "../types/game.types";
 
 const MAX_HEALTH = 10;
 
@@ -27,88 +27,121 @@ export const GameController = () => {
   const id = Cookies.get("userId");
 
   useEffect(() => {
-    socket?.on("startGame", (data) => {
-      if (data.turn) {
-        setAttackBodyPart(data.turn.attack as BodyParts);
-        setDefendBodyPart(data.turn.defend as BodyParts);
-        setIsWaiting(true);
+    if (!socket) return;
+
+    const handleStartGame = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "startGame") {
+        if (data.payload.turn) {
+          setAttackBodyPart(data.payload.turn.attack as BodyParts);
+          setDefendBodyPart(data.payload.turn.defend as BodyParts);
+          setIsWaiting(true);
+        }
+        setMyHealth(
+          data.payload.players.find(
+            (player: { id: string; type: string; health: number }) =>
+              player.id === id
+          ).health
+        );
+
+        setOpponentHealth(
+          data.payload.players.find(
+            (player: { id: string; type: string; health: number }) =>
+              player.id !== id
+          ).health
+        );
+
+        setGameStarted(true);
       }
-      setMyHealth(
-        data.players.find(
-          (player: { id: string; type: string; health: number }) =>
-            player.id === id
-        ).health
-      );
+    };
 
-      setOpponentHealth(
-        data.players.find(
-          (player: { id: string; type: string; health: number }) =>
-            player.id !== id
-        ).health
-      );
-
-      setGameStarted(true);
-    });
+    socket.addEventListener("message", handleStartGame);
 
     return () => {
-      socket?.off("startGame");
+      socket?.removeEventListener("message", handleStartGame);
     };
   }, [socket, id]);
 
   useEffect(() => {
-    socket?.on("entityUpdated", (data: IUpdateDto) => {
-      data.entities.forEach((entity) => {
-        if (entity.entityId === id) {
-          setMyDamageGotten(myHealth - entity.updates.health);
-          setMyHealth(entity.updates.health);
-        } else {
-          setOpponentDamageGotten(opponentHealth - entity.updates.health);
-          setOpponentHealth(entity.updates.health);
-        }
-      });
+    if (!socket) return;
 
-      setLogs(data.log);
+    const handleEntityUpdated = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
 
-      setAttackBodyPart(null);
-      setDefendBodyPart(null);
-      setIsWaiting(false);
-    });
+      if (data.type === "entityUpdated") {
+        data.payload.entities.forEach((entity: IEntity) => {
+          if (entity.entityId === id) {
+            setMyDamageGotten(myHealth - entity.updates.health);
+            setMyHealth(entity.updates.health);
+          } else {
+            setOpponentDamageGotten(opponentHealth - entity.updates.health);
+            setOpponentHealth(entity.updates.health);
+          }
+        });
+
+        setLogs(data.log);
+
+        setAttackBodyPart(null);
+        setDefendBodyPart(null);
+        setIsWaiting(false);
+      }
+    };
+
+    socket.addEventListener("message", handleEntityUpdated);
 
     return () => {
-      socket?.off("entityUpdated");
+      socket?.removeEventListener("message", handleEntityUpdated);
     };
   }, [socket, id, myHealth, opponentHealth]);
 
   useEffect(() => {
-    socket?.on("reconnectError", () => {
-      Cookies.remove("roomName");
-      navigate("/game", { replace: true });
-    });
+    if (!socket) return;
+
+    const handlerReconnectErorr = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "reconnectError") {
+        Cookies.remove("roomName");
+        navigate("/game", { replace: true });
+        socket.close();
+      }
+    };
+
+    socket.addEventListener("message", handlerReconnectErorr);
 
     return () => {
-      socket?.off("reconnectError");
+      socket?.removeEventListener("message", handlerReconnectErorr);
     };
   }, [socket]);
 
   useEffect(() => {
-    socket?.on("gameOver", (data) => {
-      switch (data.winner) {
-        case null:
-          setIsWinner(null);
-          break;
+    if (!socket) return;
 
-        case id:
-          setIsWinner(true);
-          break;
+    const handlerGameOver = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
 
-        default:
-          setIsWinner(false);
-          break;
+      if (data.type === "gameOver") {
+        switch (data.winner) {
+          case null:
+            setIsWinner(null);
+            break;
+
+          case id:
+            setIsWinner(true);
+            break;
+
+          default:
+            setIsWinner(false);
+            break;
+        }
       }
-    });
+    };
+
+    socket.addEventListener("message", handlerGameOver);
 
     return () => {
-      socket?.off("gameOver");
+      socket?.removeEventListener("message", handlerGameOver);
     };
   }, [id, socket]);
 
@@ -125,25 +158,30 @@ export const GameController = () => {
   };
 
   const handleQuit = () => {
-    socket?.disconnect();
+    socket?.close();
     Cookies.remove("roomName");
     navigate("/game", { replace: true });
   };
 
   const handleAttack = () => {
-    socket?.emit("attack", {
-      roomName: Cookies.get("roomName"),
-      actions: {
-        attack: attackBodyPart,
-        defend: defendBodyPart,
-      },
-    });
+    socket?.send(
+      JSON.stringify({
+        type: "attack",
+        payload: {
+          roomName: Cookies.get("roomName"),
+          actions: {
+            attack: attackBodyPart,
+            defend: defendBodyPart,
+          },
+        },
+      })
+    );
 
     setIsWaiting(true);
   };
 
   const handlePlayAgain = () => {
-    socket?.emit("joinRoom");
+    socket?.send(JSON.stringify({ type: "joinRoom" }));
     setGameStarted(false);
     setIsWinner(undefined);
   };

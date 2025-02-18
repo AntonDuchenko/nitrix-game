@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { io, Socket } from "socket.io-client";
 import { SocketContext } from "./SocketContext";
-import { DefaultEventsMap } from "@socket.io/component-emitter";
 import Cookies from "js-cookie";
 
 interface SocketProviderProps {
@@ -11,9 +9,7 @@ interface SocketProviderProps {
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
-  const socketRef = useRef<Socket<DefaultEventsMap, DefaultEventsMap> | null>(
-    null
-  );
+  const socketRef = useRef<WebSocket | null>(null);
   const navigate = useNavigate();
   const roomName = Cookies.get("roomName");
 
@@ -29,38 +25,29 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
   const connect = useCallback(
     (url: string) => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      if (isConnected) return;
 
-      const token = Cookies.get("auth_token");
+      socketRef.current = new WebSocket(url);
 
-      socketRef.current = io(url, {
-        auth: {
-          token,
-        },
-        transports: ["websocket"],
-      });
+      socketRef.current.onopen = () => {
+        if (socketRef.current) {
+          if (roomName) {
+            socketRef.current.send(JSON.stringify({ type: "reconnectRoom" }));
+          } else {
+            socketRef.current.send(JSON.stringify({ type: "joinRoom" }));
+          }
 
-      socketRef.current.on("connect", () => {
-        if (roomName) {
-          socketRef.current?.emit("reconnectRoom", {
-            room: roomName,
-          });
-        } else {
-          socketRef.current?.emit("joinRoom");
+          console.log("connected");
+          setIsConnected(true);
         }
+      };
 
-        console.log("connected");
-        setIsConnected(true);
-      });
-
-      socketRef.current.on("disconnect", () => {
+      socketRef.current.onclose = () => {
         console.log("disconnected");
         setIsConnected(false);
-      });
+      };
     },
-    [isConnected]
+    [isConnected, roomName]
   );
 
   return (
