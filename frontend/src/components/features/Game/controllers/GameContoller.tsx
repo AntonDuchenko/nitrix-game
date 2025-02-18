@@ -29,7 +29,7 @@ export const GameController = () => {
   useEffect(() => {
     socket?.on("startGame", (data) => {
       console.log("startGame");
-      
+
       if (data.turn) {
         setAttackBodyPart(data.turn.attack as BodyParts);
         setDefendBodyPart(data.turn.defend as BodyParts);
@@ -82,14 +82,14 @@ export const GameController = () => {
   }, [socket, id, myHealth, opponentHealth]);
 
   useEffect(() => {
-    socket?.on("reconnectError", () => {
+    socket?.on("reconnectError", (data) => {
+      if (data.message) {
+        alert(data.message);
+      }
+
       Cookies.remove("roomName");
       navigate("/game", { replace: true });
     });
-
-    return () => {
-      socket?.off("reconnectError");
-    };
   }, [socket]);
 
   useEffect(() => {

@@ -81,6 +81,9 @@ export function handleReconnectRoom(socket: IAuthSocket, io: Server) {
     });
 
     console.log(`Player ${playerId} reconnected to room ${room}`);
+  } else {
+    socket.emit("reconnectError", {
+      message: "Room not found"});
   }
 }
 
