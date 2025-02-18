@@ -12,6 +12,7 @@ interface PlayerProps {
   damage: number | null;
   setDamage: React.Dispatch<React.SetStateAction<number | null>>;
   onChangeBodyPart: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isWaiting: boolean;
   bodyPart: BodyParts | null;
   maxHealth: number;
 }
@@ -20,6 +21,7 @@ export const Player: React.FC<PlayerProps> = ({
   health,
   type,
   damage,
+  isWaiting,
   setDamage,
   onChangeBodyPart,
   bodyPart,
@@ -70,6 +72,7 @@ export const Player: React.FC<PlayerProps> = ({
                 })}
                 type="radio"
                 name={type}
+                disabled={isWaiting}
                 onChange={onChangeBodyPart}
                 id={`${type}-${part}`}
                 value={part}
