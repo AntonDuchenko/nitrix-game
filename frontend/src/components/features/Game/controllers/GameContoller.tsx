@@ -28,6 +28,8 @@ export const GameController = () => {
 
   useEffect(() => {
     socket?.on("startGame", (data) => {
+      console.log("startGame");
+      
       if (data.turn) {
         setAttackBodyPart(data.turn.attack as BodyParts);
         setDefendBodyPart(data.turn.defend as BodyParts);
