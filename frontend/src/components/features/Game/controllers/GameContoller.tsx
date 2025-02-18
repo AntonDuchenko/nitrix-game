@@ -82,11 +82,7 @@ export const GameController = () => {
   }, [socket, id, myHealth, opponentHealth]);
 
   useEffect(() => {
-    socket?.on("reconnectError", (data) => {
-      if (data) {
-        alert(data.message);
-      }
-
+    socket?.on("reconnectError", () => {
       Cookies.remove("roomName");
       navigate("/game", { replace: true });
     });
