@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useSocket } from "../../../../hooks/useSocket";
 import { GameView } from "../views/GameView";
 import { useNavigate } from "react-router";
@@ -26,7 +26,7 @@ export const GameController = () => {
   const navigate = useNavigate();
   const id = Cookies.get("userId");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     socket?.on("startGame", (data) => {
       console.log("startGame");
 
@@ -51,10 +51,6 @@ export const GameController = () => {
 
       setGameStarted(true);
     });
-
-    return () => {
-      socket?.off("startGame");
-    };
   }, [socket, id]);
 
   useEffect(() => {
