@@ -18,10 +18,12 @@ const disconnectedPlayers = new Map<
 >();
 let roomName = `room-${Date.now()}`;
 
-export function handleJoinRoom(socket: IAuthSocket, io: Server) {
+export function handleJoinRoom(socket: IAuthSocket) {
   socket.join(roomName);
   socket.emit("joinedRoom", { roomName });
+}
 
+export function handleInGame(socket: IAuthSocket, io: Server) {
   const clientsInRoom = io.sockets.adapter.rooms.get(roomName)?.size || 0;
   const playerId = socket.user?.id;
   if (!playerId) return;
@@ -83,7 +85,8 @@ export function handleReconnectRoom(socket: IAuthSocket, io: Server) {
     console.log(`Player ${playerId} reconnected to room ${room}`);
   } else {
     socket.emit("reconnectError", {
-      message: "Room not found"});
+      message: "Room not found",
+    });
   }
 }
 
