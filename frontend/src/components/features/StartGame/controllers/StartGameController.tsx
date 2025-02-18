@@ -5,15 +5,8 @@ import { useEffect } from "react";
 import Cookies from "js-cookie";
 
 export const StartGameController = () => {
-  const { connect, socket } = useSocket();
+  const { connect } = useSocket();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    socket?.on("joinedRoom", (data) => {
-      Cookies.set("roomName", data.roomName);
-      navigate("./play");
-    });
-  }, [socket]);
 
   useEffect(() => {
     if (Cookies.get("roomName")) {
@@ -23,6 +16,7 @@ export const StartGameController = () => {
 
   const handleClick = () => {
     connect(import.meta.env.VITE_SOCKET_URL);
+    navigate("./play");
   };
 
   return <StartGameView handleClick={handleClick} />;

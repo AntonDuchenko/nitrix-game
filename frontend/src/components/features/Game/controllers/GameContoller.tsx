@@ -27,7 +27,21 @@ export const GameController = () => {
   const id = Cookies.get("userId");
 
   useEffect(() => {
-    socket?.emit("inGame");
+    const roomName = Cookies.get("roomName");
+
+    if (roomName) {
+      socket?.emit("reconnectRoom", {
+        room: roomName,
+      });
+    } else {
+      socket?.emit("joinRoom");
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    socket?.on("joinedRoom", (data) => {
+      Cookies.set("roomName", data.roomName);
+    });
   }, [socket]);
 
   useEffect(() => {

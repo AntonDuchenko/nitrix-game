@@ -18,12 +18,10 @@ const disconnectedPlayers = new Map<
 >();
 let roomName = `room-${Date.now()}`;
 
-export function handleJoinRoom(socket: IAuthSocket) {
+export function handleJoinRoom(socket: IAuthSocket, io: Server) {
   socket.join(roomName);
   socket.emit("joinedRoom", { roomName });
-}
 
-export function handleInGame(socket: IAuthSocket, io: Server) {
   const clientsInRoom = io.sockets.adapter.rooms.get(roomName)?.size || 0;
   const playerId = socket.user?.id;
   if (!playerId) return;

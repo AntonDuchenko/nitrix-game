@@ -44,16 +44,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       });
 
       socketRef.current.on("connect", () => {
-        const roomName = Cookies.get("roomName");
-
-        if (roomName) {
-          socketRef.current?.emit("reconnectRoom", {
-            room: roomName,
-          });
-        } else {
-          socketRef.current?.emit("joinRoom");
-        }
-
         console.log("connected");
         setIsConnected(true);
       });
