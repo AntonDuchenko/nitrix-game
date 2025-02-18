@@ -83,7 +83,7 @@ export const GameController = () => {
 
   useEffect(() => {
     socket?.on("reconnectError", (data) => {
-      if (data.message) {
+      if (data) {
         alert(data.message);
       }
 

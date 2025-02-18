@@ -15,10 +15,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     null
   );
   const navigate = useNavigate();
-  const roomName = Cookies.get("roomName");
 
   useEffect(() => {
     if (!isConnected) {
+      const roomName = Cookies.get("roomName");
+
       if (roomName) {
         connect(import.meta.env.VITE_SOCKET_URL);
       } else {
@@ -43,6 +44,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       });
 
       socketRef.current.on("connect", () => {
+        const roomName = Cookies.get("roomName");
+
         if (roomName) {
           socketRef.current?.emit("reconnectRoom", {
             room: roomName,
