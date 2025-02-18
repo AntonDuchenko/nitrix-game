@@ -21,6 +21,12 @@ export const StartGameController = () => {
     }
   }, []);
 
+  useEffect(() => {
+    socket?.on("startGame", (data) => {
+      console.log("startGame", data);
+    });
+  }, [socket]);
+
   const handleClick = () => {
     connect(import.meta.env.VITE_SOCKET_URL);
   };
